@@ -83,6 +83,12 @@ class ExportJob(models.Model):
         default="",
     )
 
+    fields_to_export = models.TextField(
+        default='',
+        null=True,
+        blank=True,
+    )
+
     def get_resource_class(self):
         if self.resource:
             return (
