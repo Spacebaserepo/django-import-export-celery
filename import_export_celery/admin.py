@@ -91,10 +91,6 @@ if export_form_path:
     ExportJobForm = getattr(m, class_name)
 
 
-class ExportJobForm(ExportJobForm):
-    pass
-
-
 @admin.register(models.ExportJob)
 class ExportJobAdmin(JobWithStatusMixin, admin.ModelAdmin):
     direction = "export"
