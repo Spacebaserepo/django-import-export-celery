@@ -1,4 +1,5 @@
 # Copyright (C) 2019 o.s. Auto*Mat
+from django.conf import settings
 from django.utils import timezone
 import json
 
@@ -120,11 +121,15 @@ class ExportJob(models.Model):
     @staticmethod
     def get_format_choices():
         """returns choices of available export formats"""
-        return [
+        formats = [
             (f.CONTENT_TYPE, f().get_title())
             for f in DEFAULT_FORMATS
             if f().can_export()
         ]
+        supported_formats = getattr(settings, 'IMPORT_EXPORT_CELERY_SUPPORTED_FORMATS', None)
+        if supported_formats:
+            formats = list(filter(lambda x: x[1] in supported_formats, formats))
+        return formats
 
 
 @receiver(post_save, sender=ExportJob)
