@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exportjob',
             name='fields_to_export',
-            field=models.TextField(default=''),
+            field=models.TextField(default='', null=True, blank=True),
         ),
     ]
