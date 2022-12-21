@@ -1,4 +1,6 @@
 # Copyright (C) 2019 o.s. Auto*Mat
+from importlib import import_module
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -80,6 +82,13 @@ class ExportJobForm(forms.ModelForm):
         self.fields["format"].widget = forms.Select(
             choices=self.instance.get_format_choices()
         )
+
+
+export_form_path = getattr(settings, 'IMPORT_EXPORT_CELERY_EXPORT_JOB_ADMIN_FORM', None)
+if export_form_path:
+    module_name, class_name = export_form_path.rsplit('.', 1)
+    m = import_module(module_name)
+    ExportJobForm = getattr(m, class_name)
 
 
 @admin.register(models.ExportJob)
