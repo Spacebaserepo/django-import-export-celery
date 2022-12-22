@@ -7,8 +7,7 @@ from django.contrib import admin
 from django.core.cache import cache
 from django.utils.translation import gettext_lazy as _
 
-from . import admin_actions
-from .models.utils import get_job_models
+from . import admin_actions, get_job_models
 
 
 ImportJob, ExportJob = get_job_models()
