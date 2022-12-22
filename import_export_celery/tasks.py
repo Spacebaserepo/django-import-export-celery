@@ -21,12 +21,16 @@ from .model_config import ModelConfig
 from celery.utils.log import get_task_logger
 import logging
 
+from .models.utils import get_job_models
+
+
 logger = logging.getLogger(__name__)
 
 log = get_task_logger(__name__)
 
 
 importables = getattr(settings, "IMPORT_EXPORT_CELERY_MODELS", {})
+ImportJob, ExportJob = get_job_models()
 
 
 def change_job_status(job, direction, job_status, dry_run=False):
@@ -184,7 +188,8 @@ def _run_import_job(import_job, dry_run=True):
 @shared_task(bind=False)
 def run_import_job(pk, dry_run=True):
     log.info(f"Importing {pk} dry-run {dry_run}")
-    import_job = models.ImportJob.objects.get(pk=pk)
+
+    import_job = ImportJob.objects.get(pk=pk)
     try:
         _run_import_job(import_job, dry_run)
     except Exception as e:
@@ -197,7 +202,7 @@ def run_import_job(pk, dry_run=True):
 @shared_task(bind=False)
 def run_export_job(pk):
     log.info("Exporting %s" % pk)
-    export_job = models.ExportJob.objects.get(pk=pk)
+    export_job = ExportJob.objects.get(pk=pk)
     resource_class = export_job.get_resource_class()
     queryset = export_job.get_queryset()
     qs_len = len(queryset)

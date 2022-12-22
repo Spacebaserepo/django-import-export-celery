@@ -6,9 +6,11 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.shortcuts import redirect
 
-from .models import ExportJob
-
 from . import tasks
+from .models.utils import get_job_models
+
+
+ImportJob, ExportJob = get_job_models()
 
 
 def run_import_job_action(modeladmin, request, queryset):
