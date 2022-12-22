@@ -1,8 +1,8 @@
-from django.apps import apps
 from django.conf import settings
 
 
 def get_job_models():
+    from django.apps import apps
     from .models import ImportJob as import_job_model
     from .models import ExportJob as export_job_model
 
