@@ -1,21 +1,15 @@
 # Copyright (C) 2019 o.s. Auto*Mat
 from django.conf import settings
-from django.utils import timezone
 import json
 
 from author.decorators import with_author
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db import transaction
-from django.dispatch import receiver
 
-from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
 
 from import_export.formats.base_formats import DEFAULT_FORMATS
-
-from ..tasks import run_export_job
 
 
 @with_author
@@ -131,10 +125,3 @@ class ExportJob(models.Model):
             formats = list(filter(lambda x: x[1] in supported_formats, formats))
         return formats
 
-
-@receiver(post_save, sender=ExportJob)
-def exportjob_post_save(sender, instance, **kwargs):
-    if instance.resource and not instance.processing_initiated:
-        instance.processing_initiated = timezone.now()
-        instance.save()
-        transaction.on_commit(lambda: run_export_job.delay(instance.pk))
