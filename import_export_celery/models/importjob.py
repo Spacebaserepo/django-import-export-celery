@@ -4,15 +4,11 @@ from django.utils import timezone
 
 from author.decorators import with_author
 
-from django.db import models, transaction
-from django.dispatch import receiver
+from django.db import models
 
-from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
 
 from import_export.formats.base_formats import DEFAULT_FORMATS
-
-from ..tasks import run_import_job
 
 
 @with_author
