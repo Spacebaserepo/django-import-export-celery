@@ -7,7 +7,11 @@ from django.contrib import admin
 from django.core.cache import cache
 from django.utils.translation import gettext_lazy as _
 
-from . import admin_actions, models
+from . import admin_actions
+from .models.utils import get_job_models
+
+
+ImportJob, ExportJob = get_job_models()
 
 
 class JobWithStatusMixin:
@@ -24,7 +28,7 @@ class ImportJobForm(forms.ModelForm):
     model = forms.ChoiceField(label=_("Name of model to import to"))
 
     class Meta:
-        model = models.ImportJob
+        model = ImportJob
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
@@ -37,7 +41,13 @@ class ImportJobForm(forms.ModelForm):
         )
 
 
-@admin.register(models.ImportJob)
+import_form_path = getattr(settings, 'IMPORT_EXPORT_CELERY_IMPORT_JOB_ADMIN_FORM', None)
+if import_form_path:
+    module_name, class_name = import_form_path.rsplit('.', 1)
+    m = import_module(module_name)
+    ImportJobForm = getattr(m, class_name)
+
+
 class ImportJobAdmin(JobWithStatusMixin, admin.ModelAdmin):
     direction = "import"
     form = ImportJobForm
@@ -71,7 +81,7 @@ class ImportJobAdmin(JobWithStatusMixin, admin.ModelAdmin):
 
 class ExportJobForm(forms.ModelForm):
     class Meta:
-        model = models.ExportJob
+        model = ExportJob
         exclude = ("site_of_origin",)
 
     def __init__(self, *args, **kwargs):
@@ -91,7 +101,6 @@ if export_form_path:
     ExportJobForm = getattr(m, class_name)
 
 
-@admin.register(models.ExportJob)
 class ExportJobAdmin(JobWithStatusMixin, admin.ModelAdmin):
     direction = "export"
     form = ExportJobForm
@@ -120,3 +129,10 @@ class ExportJobAdmin(JobWithStatusMixin, admin.ModelAdmin):
         return False
 
     actions = (admin_actions.run_export_job_action,)
+
+
+if getattr(settings, 'IMPORT_EXPORT_CELERY_REGISTER_IMPORTJOB_MODEL', True):
+    admin.site.register(ImportJob, ImportJobAdmin)
+
+if getattr(settings, 'IMPORT_EXPORT_CELERY_REGISTER_EXPORTJOB_MODEL', True):
+    admin.site.register(ExportJob, ExportJobAdmin)
