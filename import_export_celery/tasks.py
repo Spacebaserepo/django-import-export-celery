@@ -15,13 +15,11 @@ from django.utils.translation import gettext_lazy as _
 
 from import_export.formats.base_formats import DEFAULT_FORMATS
 
-from . import models
+from . import models, get_job_models
 from .model_config import ModelConfig
 
 from celery.utils.log import get_task_logger
 import logging
-
-from .models.utils import get_job_models
 
 
 logger = logging.getLogger(__name__)
