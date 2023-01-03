@@ -76,10 +76,6 @@ class AbstractExportJob(models.Model):
         default="",
     )
 
-
-@with_author
-class ExportJob(AbstractExportJob):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._content_type = None
@@ -131,3 +127,8 @@ class ExportJob(AbstractExportJob):
         if supported_formats:
             formats = list(filter(lambda x: x[1] in supported_formats, formats))
         return formats
+
+
+@with_author
+class ExportJob(AbstractExportJob):
+    pass
