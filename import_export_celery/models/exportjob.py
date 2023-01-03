@@ -12,11 +12,10 @@ from django.utils.translation import gettext_lazy as _
 from import_export.formats.base_formats import DEFAULT_FORMATS
 
 
-@with_author
-class ExportJob(models.Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._content_type = None
+class AbstractExportJob(models.Model):
+
+    class Meta:
+        abstract = True
 
     file = models.FileField(
         verbose_name=_("exported file"),
@@ -77,6 +76,14 @@ class ExportJob(models.Model):
         default="",
     )
 
+
+@with_author
+class ExportJob(AbstractExportJob):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._content_type = None
+
     def get_resource_class(self):
         if self.resource:
             return (
@@ -124,4 +131,3 @@ class ExportJob(models.Model):
         if supported_formats:
             formats = list(filter(lambda x: x[1] in supported_formats, formats))
         return formats
-
