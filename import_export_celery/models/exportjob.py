@@ -12,7 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from import_export.formats.base_formats import DEFAULT_FORMATS
 
 
-@with_author
 class AbstractExportJob(models.Model):
 
     class Meta:
@@ -130,5 +129,6 @@ class AbstractExportJob(models.Model):
         return formats
 
 
+@with_author
 class ExportJob(AbstractExportJob):
     pass
