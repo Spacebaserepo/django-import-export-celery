@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
-from . import models, get_job_models
+from . import get_job_models
 from .model_config import ModelConfig
 from .utils import send_export_job_completion_mail, get_formats
 
@@ -25,7 +25,6 @@ log = get_task_logger(__name__)
 
 
 importables = getattr(settings, "IMPORT_EXPORT_CELERY_MODELS", {})
-ImportJob, ExportJob = get_job_models()
 
 
 def change_job_status(job, direction, job_status, dry_run=False):
@@ -203,6 +202,7 @@ def _run_import_job(import_job, dry_run=True):
 )
 def run_import_job(pk, dry_run=True):
     log.info(f"Importing {pk} dry-run {dry_run}")
+    ImportJob, ExportJob = get_job_models()
 
     import_job = ImportJob.objects.get(pk=pk)
     try:
@@ -221,6 +221,7 @@ def run_import_job(pk, dry_run=True):
 )
 def run_export_job(pk):
     log.info("Exporting %s" % pk)
+    ImportJob, ExportJob = get_job_models()
     export_job = ExportJob.objects.get(pk=pk)
     resource_class = export_job.get_resource_class()
     queryset = export_job.get_queryset()

@@ -1,11 +1,12 @@
 # Copyright (C) 2019 o.s. Auto*Mat
 
 from django.conf import settings
+from django.dispatch import receiver
 from django.utils import timezone
 
 from author.decorators import with_author
 
-from django.db import models
+from django.db import models, transaction
 
 from django.db.models.signals import post_save, post_delete
 from django.utils.translation import gettext_lazy as _

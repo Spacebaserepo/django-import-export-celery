@@ -8,10 +8,10 @@ def get_job_models():
 
     importjob_model_path = getattr(settings, 'IMPORT_EXPORT_CELERY_IMPORT_JOB_MODEL', None)
     if importjob_model_path:
-        import_job_model = apps.get_model(*importjob_model_path.split('.'))
+        import_job_model = apps.get_model(importjob_model_path)
 
     exportjob_model_path = getattr(settings, 'IMPORT_EXPORT_CELERY_EXPORT_JOB_MODEL', None)
     if exportjob_model_path:
-        export_job_model = apps.get_model(*exportjob_model_path.split('.'))
+        export_job_model = apps.get_model(exportjob_model_path)
 
     return import_job_model, export_job_model
