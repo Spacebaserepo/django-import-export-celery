@@ -1,24 +1,22 @@
 # Copyright (C) 2019 o.s. Auto*Mat
-from django.conf import settings
 import json
 
 from author.decorators import with_author
-
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-
 from django.utils.translation import gettext_lazy as _
 
 from ..fields import ImportExportFileField
-from ..tasks import run_export_job
 from ..utils import get_formats, get_export_job_email_on_completion
-from import_export.formats.base_formats import DEFAULT_FORMATS
 
 
 class AbstractExportJob(models.Model):
 
     class Meta:
         abstract = True
+        verbose_name = _("Export job")
+        verbose_name_plural = _("Export jobs")
 
     file = ImportExportFileField(
         verbose_name=_("exported file"),
@@ -79,10 +77,6 @@ class AbstractExportJob(models.Model):
         max_length=255,
         default="",
     )
-
-    class Meta:
-        verbose_name = _("Export job")
-        verbose_name_plural = _("Export jobs")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
