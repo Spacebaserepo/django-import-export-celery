@@ -51,7 +51,14 @@ A fully configured example project can be found in the example directory of this
 3. Done
 
 
-Preforming an import
+By default a dry run of the import is initiated when the import object is created. To instead import the file immediately without a dry-run set the `IMPORT_DRY_RUN_FIRST_TIME` to `False`
+
+    ::
+
+        IMPORT_DRY_RUN_FIRST_TIME = False
+
+
+Performing an import
 --------------------
 
 You will find an example django application that uses django-import-export-celery for importing data. There are instructions for running the example application in the example directory's README file. Once you have it running, you can perform an import with the following steps.
@@ -134,6 +141,7 @@ As with imports, a fully configured example project can be found in the `example
                         user=OuterRef("pk")).values("type")[:1])
 4. Done!
 
+
 Performing exports with celery
 ------------------------------
 
@@ -149,6 +157,99 @@ Performing exports with celery
 
 6. Click on the link near the bottom of the page titled `Exported file`.
 
+
+Excluding export file formats in the admin site
+-----------------------------------------------
+
+All available file formats to export are taken from the `Tablib project <https://pypi.org/project/tablib/>`__.
+
+To exclude or disable file formats from the admin site, configure `IMPORT_EXPORT_CELERY_EXCLUDED_FORMATS` django settings variable. This variable is a list of format strings written in lower case.
+
+    ::
+
+        IMPORT_EXPORT_CELERY_EXCLUDED_FORMATS = ["csv", "xls"]
+
+
+Customizing File Storage Backend
+--------------------------------
+
+**If you are using the new Django 4.2 STORAGES**:
+
+By default, `import_export_celery` uses Django `default` storage.
+To use your own storage, use the the `IMPORT_EXPORT_CELERY_STORAGE_ALIAS` variable in your Django settings and adding the STORAGES definition.
+For instance:
+
+    ::
+
+        STORAGES = {
+            "import_export_celery": {
+                "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            },
+        }
+        IMPORT_EXPORT_CELERY_STORAGE_ALIAS = 'import_export_celery'
+
+**DEPRECATED: If you are using old style storages**:
+
+Define a custom storage backend by adding the `IMPORT_EXPORT_CELERY_STORAGE` to your Django settings. For instance:
+
+    ::
+
+        IMPORT_EXPORT_CELERY_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+
+Customizing Task Time Limits
+----------------------------
+
+By default, there is no time limit on celery import/export tasks. This can be customized by setting the following variables in your Django settings file.
+
+    ::
+
+        # set import time limits (in seconds)
+        IMPORT_EXPORT_CELERY_IMPORT_SOFT_TIME_LIMIT = 300  # 5 minutes
+        IMPORT_EXPORT_CELERY_IMPORT_HARD_TIME_LIMIT = 360  # 6 minutes
+
+        # set export time limits (in seconds)
+        IMPORT_EXPORT_CELERY_EXPORT_SOFT_TIME_LIMIT = 300  # 5 minutes
+        IMPORT_EXPORT_CELERY_EXPORT_HARD_TIME_LIMIT = 360  # 6 minutes
+
+Customizing email settings for export job completion
+----------------------------------------------------------
+
+By default the export job completion email uses the following settings
+
+
+    ::
+
+        Subject: 'Django: Export job completed'
+        Email template: 'email/export_job_completion.html'
+        Email on completion: True
+
+
+The default email template can be found `here <https://github.com/auto-mat/django-import-export-celery/blob/master/import_export_celery/templates/email/export_job_completion.html>`__
+
+The default email subject, template and sending behavior can be customized by overriding these values from django settings:-
+
+
+    ::
+
+        EXPORT_JOB_COMPLETION_MAIL_SUBJECT="Your custom subject"
+        EXPORT_JOB_COMPLETION_MAIL_TEMPLATE="path_to_folder/your_custom_template.html"
+        EXPORT_JOB_EMAIL_ON_COMPLETION = True  # Set to False to disable email
+
+
+The email template will get some context variables that you can use to customize your template.
+
+
+    ::
+
+        {
+            export_job: The current instance of ExportJob model
+            app_label: export_job.app_label
+            model: export_job.model
+            link: A link to go to the export_job instance on django admin
+        }
+
+
 For developers of this library
 ------------------------------
 
@@ -158,10 +259,10 @@ Before submitting a PR please run `flake8` and (in the examples directory) `pyth
 
 Please note, that you need to restart celery for changes to propogate to the workers. Do this with `docker-compose down celery`, `docker-compose up celery`.
 
-Comercial support
------------------
+Commercial support
+------------------
 
-Comercial support is provided by `gradesta s.r.o <https://gradesta.com/support/>`_.
+Commercial support is provided by `gradesta s.r.o <https://gradesta.com/support/>`_.
 
 Credits
 -------

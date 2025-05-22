@@ -9,6 +9,9 @@ from django.db import models
 
 from django.utils.translation import gettext_lazy as _
 
+from ..fields import ImportExportFileField
+from ..tasks import run_export_job
+from ..utils import get_formats, get_export_job_email_on_completion
 from import_export.formats.base_formats import DEFAULT_FORMATS
 
 
@@ -17,7 +20,7 @@ class AbstractExportJob(models.Model):
     class Meta:
         abstract = True
 
-    file = models.FileField(
+    file = ImportExportFileField(
         verbose_name=_("exported file"),
         upload_to="django-import-export-celery-export-jobs",
         blank=False,
@@ -68,13 +71,18 @@ class AbstractExportJob(models.Model):
 
     email_on_completion = models.BooleanField(
         verbose_name=_("Send me an email when this export job is complete"),
-        default=True,
+        default=get_export_job_email_on_completion,
     )
 
     site_of_origin = models.TextField(
+        verbose_name=_("Site of origin"),
         max_length=255,
         default="",
     )
+
+    class Meta:
+        verbose_name = _("Export job")
+        verbose_name_plural = _("Export jobs")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -120,7 +128,7 @@ class AbstractExportJob(models.Model):
         """returns choices of available export formats"""
         formats = [
             (f.CONTENT_TYPE, f().get_title())
-            for f in DEFAULT_FORMATS
+            for f in get_formats()
             if f().can_export()
         ]
         supported_formats = getattr(settings, 'IMPORT_EXPORT_CELERY_SUPPORTED_FORMATS', None)

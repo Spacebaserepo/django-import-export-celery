@@ -58,7 +58,7 @@ ROOT_URLCONF = "winners.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -67,6 +67,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "debug": DEBUG,
         },
     },
 ]
@@ -78,17 +79,24 @@ REDIS_URL = os.environ.get("REDIS_URL", "redis://redis")
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get("DATABASE_NAME", "pguser"),
-        "USER": os.environ.get("DATABASE_USER", "pguser"),
-        "PASSWORD": os.environ.get("DATABASE_PASSWORD", "foobar"),
-        "HOST": os.environ.get("DATABASE_HOST", "postgres"),
-        "PORT": os.environ.get("DATABASE_PORT", ""),
-    },
-}
-
+if os.environ.get("DATABASE_TYPE") == "sqlite":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.environ.get("DATABASE_NAME", os.path.join(BASE_DIR, "db.sqlite3")),
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": os.environ.get("DATABASE_NAME", "pguser"),
+            "USER": os.environ.get("DATABASE_USER", "pguser"),
+            "PASSWORD": os.environ.get("DATABASE_PASSWORD", "foobar"),
+            "HOST": os.environ.get("DATABASE_HOST", "postgres"),
+            "PORT": os.environ.get("DATABASE_PORT", ""),
+        },
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
@@ -135,3 +143,11 @@ IMPORT_EXPORT_CELERY_MODELS = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Default import time limits (in seconds)
+IMPORT_EXPORT_CELERY_IMPORT_SOFT_TIME_LIMIT = 300  # 5 minutes
+IMPORT_EXPORT_CELERY_IMPORT_HARD_TIME_LIMIT = 360  # 6 minutes
+
+# Default export time limits (in seconds)
+IMPORT_EXPORT_CELERY_EXPORT_SOFT_TIME_LIMIT = 300  # 5 minutes
+IMPORT_EXPORT_CELERY_EXPORT_HARD_TIME_LIMIT = 360  # 6 minutes

@@ -1,19 +1,28 @@
 # Copyright (C) 2019 o.s. Auto*Mat
 
+from django.conf import settings
 from django.utils import timezone
 
 from author.decorators import with_author
 
 from django.db import models
 
+from django.db.models.signals import post_save, post_delete
 from django.utils.translation import gettext_lazy as _
 
 from import_export.formats.base_formats import DEFAULT_FORMATS
 
+from ..fields import ImportExportFileField
+from ..tasks import run_import_job
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 @with_author
 class ImportJob(models.Model):
-    file = models.FileField(
+    file = ImportExportFileField(
         verbose_name=_("File to be imported"),
         upload_to="django-import-export-celery-import-jobs",
         blank=False,
@@ -40,7 +49,7 @@ class ImportJob(models.Model):
         max_length=255,
     )
 
-    change_summary = models.FileField(
+    change_summary = ImportExportFileField(
         verbose_name=_("Summary of changes made by this import"),
         upload_to="django-import-export-celery-import-change-summaries",
         blank=True,
@@ -48,6 +57,7 @@ class ImportJob(models.Model):
     )
 
     errors = models.TextField(
+        verbose_name=_("Errors"),
         default="",
         blank=True,
     )
@@ -63,6 +73,10 @@ class ImportJob(models.Model):
         blank=True,
     )
 
+    class Meta:
+        verbose_name = _("Import job")
+        verbose_name_plural = _("Import jobs")
+
     @staticmethod
     def get_format_choices():
         """returns choices of available import formats"""
@@ -71,3 +85,31 @@ class ImportJob(models.Model):
             for f in DEFAULT_FORMATS
             if f().can_import()
         ]
+
+
+@receiver(post_save, sender=ImportJob)
+def importjob_post_save(sender, instance, **kwargs):
+    if not instance.processing_initiated:
+        instance.processing_initiated = timezone.now()
+        instance.save()
+        transaction.on_commit(
+            lambda: run_import_job.delay(
+                instance.pk,
+                dry_run=getattr(settings, "IMPORT_DRY_RUN_FIRST_TIME", True),
+            )
+        )
+
+
+@receiver(post_delete, sender=ImportJob)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file related to the import job
+    """
+    if instance.file:
+        try:
+            instance.file.delete()
+        except Exception as e:
+            logger.error(
+                "Some error occurred while deleting ImportJob file: {0}".format(e)
+            )
+        ImportJob.objects.filter(id=instance.id).delete()

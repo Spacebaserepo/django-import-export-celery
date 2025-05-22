@@ -14,6 +14,7 @@ ImportJob, ExportJob = get_job_models()
 
 
 class JobWithStatusMixin:
+    @admin.display(description=_("Job status info"))
     def job_status_info(self, obj):
         job_status = cache.get(self.direction + "_job_status_%s" % obj.pk)
         if job_status:
@@ -23,7 +24,6 @@ class JobWithStatusMixin:
 
 
 class ImportJobForm(forms.ModelForm):
-
     model = forms.ChoiceField(label=_("Name of model to import to"))
 
     class Meta:
